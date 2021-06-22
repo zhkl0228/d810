@@ -451,7 +451,11 @@ def mba_deep_cleaning(mba: mbl_array_t, call_mba_combine_block=True) -> int:
         # TODO: investigate the root cause of this issue
         mba.combine_blocks()
     else:
-        mba.remove_empty_blocks()
+        # In IDA Pro 7.6, remove_empty_blocks is removed and replaced (?) by remove_empty_and_unreachable_blocks
+        try:
+            mba.remove_empty_blocks()
+        except AttributeError:
+            mba.remove_empty_and_unreachable_blocks()
     nb_change = mba_remove_simple_goto_blocks(mba)
     return nb_change
 
