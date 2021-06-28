@@ -46,6 +46,14 @@ class SetGlobalVariablesToZeroIfDetectedReadOnly(EarlyRule):
     PATTERN = AstNode(m_mov, AstLeaf("ro_dword"))
     REPLACEMENT_PATTERN = AstNode(m_mov, AstConstant("val_res"))
 
+    def __init__(self):
+        super().__init__()
+        # If we optimized too early (in MMAT_GENERATED), we may replace something like
+        # 'mov     &($dword_10020CC8).4, eoff.4' by 'mov     #0.4, eoff.4'
+        # and this will lead to incorrect decompilation where MEMORY[0] is used
+        # Thus, we explicitly specify the MMAT_PREOPTIMIZED maturity.
+        self.maturities = [MMAT_PREOPTIMIZED]
+
     def is_read_only_inited_var(self, address):
         s: segment_t = getseg(address)
         if s is None:
