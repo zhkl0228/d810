@@ -144,11 +144,15 @@ class GenericDispatcherInfo(object):
         microcode_interpreter = MicroCodeInterpreter()
         microcode_environment = MicroCodeEnvironment()
         dispatcher_input_info = []
+        # First, we setup the MicroCodeEnvironment with the state variables (self.entry_block.use_before_def_list)
+        # used by the dispatcher
         for initialization_mop in self.entry_block.use_before_def_list:
+            # We recover the value of each state variable from the dispatcher father
             initialization_mop_value = father_history.get_mop_constant_value(initialization_mop)
             if initialization_mop_value is None:
                 raise NotResolvableFatherException("Can't emulate dispatcher {0} with history {1}"
                                                    .format(self.entry_block.serial, father_history.block_serial_path))
+            # We store this value in the MicroCodeEnvironment
             microcode_environment.define(initialization_mop, initialization_mop_value)
             dispatcher_input_info.append("{0} = {1:x}".format(format_mop_t(initialization_mop),
                                                               initialization_mop_value))
@@ -156,17 +160,23 @@ class GenericDispatcherInfo(object):
         unflat_logger.info("Executing dispatcher {0} with: {1}"
                            .format(self.entry_block.blk.serial, ", ".join(dispatcher_input_info)))
 
+        # Now, we start the emulation of the code at the dispatcher entry block
         instructions_executed = []
         cur_blk = self.entry_block.blk
         cur_ins = cur_blk.head
+        # We will continue emulation while we are in one of the dispatcher blocks
         while self.should_emulation_continue(cur_blk):
             unflat_logger.debug("  Executing: {0}.{1}".format(cur_blk.serial, format_minsn_t(cur_ins)))
+            # We evaluate the current instruction of the dispatcher to determine
+            # which block and instruction should be executed next
             is_ok = microcode_interpreter.eval_instruction(cur_blk, cur_ins, microcode_environment)
             if not is_ok:
                 return cur_blk, instructions_executed
             instructions_executed.append(cur_ins)
             cur_blk = microcode_environment.next_blk
             cur_ins = microcode_environment.next_ins
+        # We return the first block executed which is not part of the dispatcher
+        # and all instructions which have been executed by the dispatcher
         return cur_blk, instructions_executed
 
     def print_info(self, verbose=False):
