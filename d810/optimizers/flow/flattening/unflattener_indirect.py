@@ -62,20 +62,20 @@ class TigressIndirectDispatcherCollector(GenericDispatcherCollector):
 
 
 class LabelTableInfo(object):
-    def __init__(self, sp_offset, mem_offset, nb_elt):
+    def __init__(self, sp_offset, mem_offset, nb_elt, ptr_size=8):
         self.sp_offset = sp_offset
         self.mem_offset = mem_offset
         self.nb_elt = nb_elt
+        self.ptr_size = ptr_size
 
     def update_mop_tracker(self, mba: mbl_array_t, mop_tracker: MopTracker):
         stack_array_base_address = mba.stkoff_ida2vd(self.sp_offset)
-        # print("stack_array_base_address: {0:x}".format(stack_array_base_address))
         for i in range(self.nb_elt):
             tmp_mop = mop_t()
             tmp_mop.erase()
-            tmp_mop._make_stkvar(mba, stack_array_base_address + 8 * i)
-            tmp_mop.size = 8
-            mem_val = idaapi.get_qword(self.mem_offset + 8 * i) & AND_TABLE[8]
+            tmp_mop._make_stkvar(mba, stack_array_base_address + self.ptr_size * i)
+            tmp_mop.size = self.ptr_size
+            mem_val = idaapi.get_qword(self.mem_offset + self.ptr_size * i) & AND_TABLE[self.ptr_size]
             mop_tracker.add_mop_definition(tmp_mop, mem_val)
 
 
