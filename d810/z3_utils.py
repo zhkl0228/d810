@@ -13,6 +13,14 @@ z3_file_logger = logging.getLogger('D810.z3_test')
 try:
     import z3
     Z3_INSTALLED = True
+    # Since version 4.8.2, when Z3 is creating a BitVec, it relies on _str_to_bytes which uses sys.stdout.encoding
+    # However, in IDA Pro (7.6sp1) sys.stdout is an object of type IDAPythonStdOut
+    # which doesn't have a 'encoding' attribute, thus we set it to something, so that Z3 works
+    try:
+        x = sys.stdout.encoding
+    except AttributeError:
+        logger.debug("Couldn't find sys.stdout.encoding, setting it to utf-8")
+        sys.stdout.encoding = "utf-8"
 except ImportError:
     logger.info("Z3 features disabled. Install Z3 to enable them")
     Z3_INSTALLED = False
