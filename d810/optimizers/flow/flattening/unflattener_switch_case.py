@@ -18,7 +18,7 @@ class TigressSwitchDispatcherInfo(GenericDispatcherInfo):
     def explore(self, blk: mblock_t):
         self.reset()
         if not self._is_candidate_for_dispatcher_entry_block(blk):
-            return
+            return False
         self.mop_compared, mcases = self._get_comparison_info(blk)
         self.entry_block = TigressSwitchDispatcherBlockInfo(blk)
         self.entry_block.parse()

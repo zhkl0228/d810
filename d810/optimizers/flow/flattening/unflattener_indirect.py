@@ -25,7 +25,7 @@ class TigressIndirectDispatcherInfo(GenericDispatcherInfo):
     def explore(self, blk: mblock_t):
         self.reset()
         if not self._is_candidate_for_dispatcher_entry_block(blk):
-            return
+            return False
         self.mop_compared = self._get_comparison_info(blk)
         self.entry_block = TigressIndirectDispatcherBlockInfo(blk)
         self.entry_block.parse()
@@ -38,7 +38,6 @@ class TigressIndirectDispatcherInfo(GenericDispatcherInfo):
         return True
 
     def _get_comparison_info(self, blk: mblock_t):
-        # blk.tail must be a jtbl
         if (blk.tail is None) or (blk.tail.opcode != m_ijmp):
             return None, None
         return blk.tail.l
